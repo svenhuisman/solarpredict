@@ -149,7 +149,9 @@ async def healthz():
 async def api_forecast(
     lat: float | None = None,
     lon: float | None = None,
-    planes: str | None = Query(None, description="dec:az:kwp[,dec:az:kwp...]"),
+    planes: str | None = Query(
+        None, description="dec:az:kwp[,dec:az:kwp...]; az accepts -180..180, compass degrees like '113c', or cardinals like 'SE'"
+    ),
     horizon: str | None = None,
     damping_morning: float | None = None,
     damping_evening: float | None = None,

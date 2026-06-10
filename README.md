@@ -126,6 +126,12 @@ existing forecast.solar client code can be pointed here.
 - `dec`: tilt, 0 (horizontal) – 90 (vertical)
 - `az`: azimuth, forecast.solar convention: 0 = South, −90 = East, 90 = West
 
+In the `planes` parameter the azimuth additionally accepts **compass degrees**
+with a `c` suffix (`113c` = what an iPhone compass shows: 0 = North,
+90 = East, 180 = South, 270 = West) and **cardinal directions**
+(`N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`, plus 16-point like `WSW`).
+`30:113c:5.0`, `30:-67:5.0` and `30:ESE:5.0` are roughly equivalent.
+
 ### Query parameters (all endpoints)
 
 | Param | Meaning | Default |

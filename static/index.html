@@ -51,7 +51,7 @@
     </div>
 
     <div style="margin-top:14px">
-      <label style="margin-bottom:6px">Planes (tilt &deg; / azimuth &deg; [0=S, -90=E, 90=W] / kWp)</label>
+      <label style="margin-bottom:6px">Planes (tilt &deg; / azimuth [0=S, -90=E, 90=W &mdash; or compass with c-suffix like 113c, or N/SE/W] / kWp)</label>
       <div id="planes"></div>
       <button class="ghost" onclick="addPlane()">+ Add plane</button>
     </div>
@@ -105,7 +105,7 @@ function addPlane(dec = 30, az = 0, kwp = 5.0) {
   row.className = "plane-row";
   row.innerHTML = `
     <div><label>Tilt</label><input class="p-dec" type="number" step="1" value="${dec}"></div>
-    <div><label>Azimuth</label><input class="p-az" type="number" step="1" value="${az}"></div>
+    <div><label>Azimuth</label><input class="p-az" type="text" value="${az}"></div>
     <div><label>kWp</label><input class="p-kwp" type="number" step="0.1" value="${kwp}"></div>
     <button title="Remove" onclick="this.parentElement.remove()">&times;</button>`;
   $("planes").appendChild(row);

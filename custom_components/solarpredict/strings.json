@@ -8,7 +8,7 @@
           "host": "Server URL",
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "planes": "Planes (tilt:azimuth:kWp, comma-separated)",
+          "planes": "Planes (tilt:azimuth:kWp, comma-separated; azimuth 0=S, -90=E, 90=W \u2014 or compass degrees like 113c, or N/SE/W)",
           "api_token": "API token (only if the server has SP_API_TOKEN set)"
         }
       },
@@ -19,7 +19,7 @@
           "host": "Server URL",
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "planes": "Planes (tilt:azimuth:kWp, comma-separated)",
+          "planes": "Planes (tilt:azimuth:kWp, comma-separated; azimuth 0=S, -90=E, 90=W \u2014 or compass degrees like 113c, or N/SE/W)",
           "api_token": "API token (only if the server has SP_API_TOKEN set)"
         }
       }

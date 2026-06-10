@@ -59,8 +59,45 @@ class ForecastResult:
     timezone: str
 
 
+# cardinal directions in forecast.solar degrees (0=S, -90=E, 90=W, ±180=N)
+_CARDINALS = {
+    "N": 180.0, "NNE": -157.5, "NE": -135.0, "ENE": -112.5,
+    "E": -90.0, "ESE": -67.5, "SE": -45.0, "SSE": -22.5,
+    "S": 0.0, "SSW": 22.5, "SW": 45.0, "WSW": 67.5,
+    "W": 90.0, "WNW": 112.5, "NW": 135.0, "NNW": 157.5,
+}
+
+
+def parse_azimuth(spec: str) -> float:
+    """Parse an azimuth in any of three notations:
+
+    - forecast.solar degrees: -180..180 (0=S, -90=E, 90=W)
+    - compass degrees with 'c' suffix: '113c' (0=N, 90=E, 180=S, 270=W)
+    - cardinal direction: 'S', 'SE', 'WSW', ...
+    """
+    s = spec.strip().upper()
+    if s in _CARDINALS:
+        return _CARDINALS[s]
+    if s.endswith("C"):
+        compass = float(s[:-1])
+        if not 0.0 <= compass <= 360.0:
+            raise ValueError(f"Compass azimuth '{spec}' out of range 0..360")
+        return (compass % 360.0) - 180.0
+    az = float(s)
+    if not -180.0 <= az <= 180.0:
+        raise ValueError(
+            f"Azimuth '{spec}' out of range -180..180 "
+            f"(0=S, -90=E, 90=W; append 'c' for compass degrees, e.g. '{s}c')"
+        )
+    return az
+
+
 def parse_planes(spec: str) -> list[Plane]:
-    """Parse 'dec:az:kwp[,dec:az:kwp...]' (also accepts ';' separators)."""
+    """Parse 'dec:az:kwp[,dec:az:kwp...]' (also accepts ';' separators).
+
+    Azimuth accepts forecast.solar degrees, compass degrees ('113c') or a
+    cardinal direction ('SE') — see parse_azimuth.
+    """
     planes = []
     for part in spec.replace(";", ",").split(","):
         part = part.strip()
@@ -69,7 +106,13 @@ def parse_planes(spec: str) -> list[Plane]:
         bits = part.split(":")
         if len(bits) != 3:
             raise ValueError(f"Invalid plane spec '{part}', expected dec:az:kwp")
-        planes.append(Plane(declination=float(bits[0]), azimuth=float(bits[1]), kwp=float(bits[2])))
+        planes.append(
+            Plane(
+                declination=float(bits[0]),
+                azimuth=parse_azimuth(bits[1]),
+                kwp=float(bits[2]),
+            )
+        )
     if not planes:
         raise ValueError("No planes configured")
     return planes

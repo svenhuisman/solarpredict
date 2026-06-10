@@ -65,6 +65,29 @@ def test_parse_planes():
     assert planes[1].azimuth_compass == 90.0
 
 
+def test_parse_planes_compass_suffix():
+    planes = parse_planes("30:113c:5.0,30:270c:2.5,30:0c:1.0")
+    assert planes[0].azimuth == -67.0  # iPhone compass 113 = ESE-ish
+    assert planes[1].azimuth == 90.0  # compass 270 = West
+    assert planes[2].azimuth == -180.0  # compass 0 = North
+
+
+def test_parse_planes_cardinals():
+    planes = parse_planes("30:S:5.0,30:e:2.5,30:WSW:1.0")
+    assert planes[0].azimuth == 0.0
+    assert planes[1].azimuth == -90.0
+    assert planes[2].azimuth == 67.5
+
+
+def test_parse_planes_rejects_out_of_range_azimuth():
+    for bad in ("30:270:5.0", "30:-181:5.0", "30:361c:5.0"):
+        try:
+            parse_planes(bad)
+            assert False, f"expected ValueError for {bad}"
+        except ValueError:
+            pass
+
+
 def test_parse_horizon_rejects_short():
     try:
         parse_horizon("1,2")
