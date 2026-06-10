@@ -35,6 +35,8 @@ series:
     color: '#7b9fe0'
     stroke_width: 2
     extend_to: false
+    show:
+      in_header: raw  # legend shows the sensor state; the generated series is future data and would otherwise read N/A
     data_generator: |
       return entity.attributes.forecast.map((p) => {
         return [new Date(p.time).getTime(), p.watts];
