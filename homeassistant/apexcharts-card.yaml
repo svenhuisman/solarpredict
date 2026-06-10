@@ -1,0 +1,43 @@
+# SolarPredict — "actual vs forecast" dashboard card
+#
+# Requires:
+#   - the SolarPredict custom integration (Option A in the README); the
+#     power sensor carries the full forecast series in its `forecast`
+#     attribute, which this card plots into the future
+#   - apexcharts-card from HACS (https://github.com/RomRider/apexcharts-card)
+#
+# Replace:
+#   - sensor.YOUR_ACTUAL_PV_POWER  -> your inverter's actual power sensor (W)
+#   - sensor.solarpredict_power_now -> your SolarPredict power sensor entity id
+#     (check it under Settings -> Devices & Services -> SolarPredict)
+
+type: custom:apexcharts-card
+header:
+  show: true
+  title: Solar — actual vs forecast
+graph_span: 24h
+span:
+  start: day
+now:
+  show: true
+  label: Now
+series:
+  - entity: sensor.YOUR_ACTUAL_PV_POWER
+    name: Actual
+    type: area
+    color: '#e2a93c'
+    stroke_width: 2
+    opacity: 0.5
+    extend_to: now
+  - entity: sensor.solarpredict_power_now
+    name: Forecast
+    type: line
+    color: '#7b9fe0'
+    stroke_width: 2
+    extend_to: false
+    data_generator: |
+      return entity.attributes.forecast.map((p) => {
+        return [new Date(p.time).getTime(), p.watts];
+      });
+yaxis:
+  - min: 0

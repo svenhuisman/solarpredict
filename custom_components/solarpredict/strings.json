@@ -11,13 +11,25 @@
           "planes": "Planes (tilt:azimuth:kWp, comma-separated)",
           "api_token": "API token (only if the server has SP_API_TOKEN set)"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure SolarPredict",
+        "description": "Change the server URL, location or panel planes.",
+        "data": {
+          "host": "Server URL",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "planes": "Planes (tilt:azimuth:kWp, comma-separated)",
+          "api_token": "API token (only if the server has SP_API_TOKEN set)"
+        }
       }
     },
     "error": {
       "cannot_connect": "Could not connect to the SolarPredict server. Check the URL."
     },
     "abort": {
-      "already_configured": "This SolarPredict server is already configured."
+      "already_configured": "This SolarPredict server is already configured.",
+      "reconfigure_successful": "Re-configuration was successful."
     }
   },
   "options": {

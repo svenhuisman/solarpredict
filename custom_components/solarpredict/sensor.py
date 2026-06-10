@@ -100,6 +100,8 @@ class SolarPredictSensor(CoordinatorEntity[SolarPredictCoordinator], SensorEntit
 
     entity_description: SolarPredictSensorDescription
     _attr_has_entity_name = True
+    # the full series is large; keep it out of the recorder database
+    _unrecorded_attributes = frozenset({"forecast"})
 
     def __init__(
         self,
@@ -121,3 +123,10 @@ class SolarPredictSensor(CoordinatorEntity[SolarPredictCoordinator], SensorEntit
     @property
     def native_value(self) -> Any:
         return self.entity_description.value_fn(self.coordinator.data["summary"])
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Expose the full forecast series on the power sensor for chart cards."""
+        if self.entity_description.key != "power_now":
+            return None
+        return {"forecast": self.coordinator.data.get("series", [])}

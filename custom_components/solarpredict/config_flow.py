@@ -64,6 +64,49 @@ class SolarPredictConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow changing host, location, planes and token after setup."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST].rstrip("/")
+            user_input[CONF_HOST] = host
+
+            existing = self.hass.config_entries.async_entry_for_domain_unique_id(
+                self.handler, host
+            )
+            if existing is not None and existing.entry_id != entry.entry_id:
+                return self.async_abort(reason="already_configured")
+
+            if await self._can_connect(host):
+                return self.async_update_reload_and_abort(
+                    entry, unique_id=host, data_updates=user_input
+                )
+            errors["base"] = "cannot_connect"
+
+        data = {**entry.data, **(user_input or {})}
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=data[CONF_HOST]): str,
+                vol.Required(CONF_LATITUDE, default=data[CONF_LATITUDE]): vol.Coerce(
+                    float
+                ),
+                vol.Required(CONF_LONGITUDE, default=data[CONF_LONGITUDE]): vol.Coerce(
+                    float
+                ),
+                vol.Required(
+                    CONF_PLANES, default=data.get(CONF_PLANES, DEFAULT_PLANES)
+                ): str,
+                vol.Optional(CONF_API_TOKEN, default=data.get(CONF_API_TOKEN, "")): str,
+            }
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )
+
     async def _can_connect(self, host: str) -> bool:
         session = async_get_clientsession(self.hass)
         try:

@@ -90,6 +90,12 @@ exactly like the official forecast.solar integration.
 Also installable via HACS as a custom repository
 (HACS → Integrations → ⋮ → Custom repositories → this repo URL).
 
+The power sensor exposes the full forecast curve in its `forecast`
+attribute (list of `{time, watts, watt_hours}` points), so chart cards can
+plot the prediction into the future — see
+[homeassistant/apexcharts-card.yaml](homeassistant/apexcharts-card.yaml)
+for a ready-made "actual vs forecast" card.
+
 ### Option B — REST sensors (no custom component)
 
 Copy [homeassistant/solarpredict.yaml](homeassistant/solarpredict.yaml) into
