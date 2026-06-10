@@ -15,6 +15,8 @@ type: custom:apexcharts-card
 header:
   show: true
   title: Solar — actual vs forecast
+  show_states: true
+  colorize_states: true
 graph_span: 24h
 span:
   start: day
@@ -36,7 +38,8 @@ series:
     stroke_width: 2
     extend_to: false
     show:
-      in_header: raw  # legend shows the sensor state; the generated series is future data and would otherwise read N/A
+      in_header: raw       # header shows the sensor state; the generated series is future data and would otherwise show its last (night) value
+      legend_value: false  # the legend can only show the last datapoint (0 W at night), so hide it there
     data_generator: |
       return entity.attributes.forecast.map((p) => {
         return [new Date(p.time).getTime(), p.watts];
