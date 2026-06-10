@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolarPredict</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #2d333b;
+    --text: #e6edf3; --muted: #8b949e; --accent: #f0b429; --accent2: #58a6ff;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  h1 .sun { color: var(--accent); }
+  .sub { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  input, select { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; font-size: 14px; }
+  input:focus { outline: none; border-color: var(--accent2); }
+  button { background: var(--accent); color: #1c1500; border: none; border-radius: 6px; padding: 9px 18px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  button.ghost { background: transparent; color: var(--accent2); border: 1px solid var(--border); }
+  .plane-row { display: grid; grid-template-columns: 1fr 1fr 1fr 36px; gap: 8px; margin-bottom: 8px; align-items: end; }
+  .plane-row button { padding: 7px 0; background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .stat .v { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  #chart-wrap { overflow-x: auto; }
+  details summary { cursor: pointer; color: var(--accent2); font-size: 13px; margin-bottom: 10px; }
+  #status { color: var(--muted); font-size: 13px; }
+  #status.err { color: #f85149; }
+  textarea { width: 100%; height: 220px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: ui-monospace, monospace; font-size: 12px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+  <h1><span class="sun">&#9728;</span> SolarPredict</h1>
+  <div class="sub">Self-hosted solar production forecast &middot; Open-Meteo irradiance &middot; forecast.solar-compatible API</div>
+
+  <div class="card">
+    <div class="grid">
+      <div><label>Latitude</label><input id="lat" type="number" step="0.0001" value="52.37"></div>
+      <div><label>Longitude</label><input id="lon" type="number" step="0.0001" value="4.90"></div>
+      <div><label>Timezone</label><input id="tz" value="Europe/Amsterdam"></div>
+      <div><label>Days</label><select id="days"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
+      <div><label>Resolution</label><select id="resolution"><option value="15" selected>15 min</option><option value="60">1 hour</option></select></div>
+    </div>
+
+    <div style="margin-top:14px">
+      <label style="margin-bottom:6px">Planes (tilt &deg; / azimuth &deg; [0=S, -90=E, 90=W] / kWp)</label>
+      <div id="planes"></div>
+      <button class="ghost" onclick="addPlane()">+ Add plane</button>
+    </div>
+
+    <details style="margin-top:14px">
+      <summary>Advanced (horizon, damping, inverter, efficiency)</summary>
+      <div class="grid">
+        <div><label>Inverter limit (kW)</label><input id="inverter_kw" type="number" step="0.1" placeholder="none"></div>
+        <div><label>System efficiency</label><input id="efficiency" type="number" step="0.01" value="0.90"></div>
+        <div><label>Albedo</label><input id="albedo" type="number" step="0.05" value="0.2"></div>
+        <div><label>Damping morning (0&ndash;1)</label><input id="damping_morning" type="number" step="0.05" value="0"></div>
+        <div><label>Damping evening (0&ndash;1)</label><input id="damping_evening" type="number" step="0.05" value="0"></div>
+      </div>
+      <div style="margin-top:10px">
+        <label>Horizon profile (elevation &deg;, comma-separated, evenly spaced starting North)</label>
+        <input id="horizon" placeholder="e.g. 0,0,5,12,8,3,0,0  (8 values = 45&deg; steps)">
+      </div>
+    </details>
+
+    <div class="row">
+      <button onclick="loadForecast()">Update forecast</button>
+      <button class="ghost" onclick="showYaml()">Home Assistant YAML</button>
+      <span id="status"></span>
+    </div>
+  </div>
+
+  <div class="card" id="summary-card" style="display:none">
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="card" id="chart-card" style="display:none">
+    <div id="chart-wrap"></div>
+  </div>
+
+  <div class="card" id="yaml-card" style="display:none">
+    <label>Paste into Home Assistant configuration.yaml (replace host/port if needed)</label>
+    <textarea id="yaml" readonly></textarea>
+    <div class="row"><button class="ghost" onclick="copyYaml()">Copy to clipboard</button></div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+const FIELDS = ["lat","lon","tz","days","resolution","inverter_kw","efficiency","albedo","damping_morning","damping_evening","horizon"];
+
+function addPlane(dec = 30, az = 0, kwp = 5.0) {
+  const row = document.createElement("div");
+  row.className = "plane-row";
+  row.innerHTML = `
+    <div><label>Tilt</label><input class="p-dec" type="number" step="1" value="${dec}"></div>
+    <div><label>Azimuth</label><input class="p-az" type="number" step="1" value="${az}"></div>
+    <div><label>kWp</label><input class="p-kwp" type="number" step="0.1" value="${kwp}"></div>
+    <button title="Remove" onclick="this.parentElement.remove()">&times;</button>`;
+  $("planes").appendChild(row);
+}
+
+function planesSpec() {
+  return [...document.querySelectorAll(".plane-row")].map(r =>
+    `${r.querySelector(".p-dec").value}:${r.querySelector(".p-az").value}:${r.querySelector(".p-kwp").value}`
+  ).join(",");
+}
+
+function params() {
+  const p = new URLSearchParams({
+    lat: $("lat").value, lon: $("lon").value, tz: $("tz").value,
+    days: $("days").value, resolution: $("resolution").value,
+    efficiency: $("efficiency").value, albedo: $("albedo").value,
+    damping_morning: $("damping_morning").value, damping_evening: $("damping_evening").value,
+    planes: planesSpec(),
+  });
+  if ($("inverter_kw").value) p.set("inverter_kw", $("inverter_kw").value);
+  if ($("horizon").value.trim()) p.set("horizon", $("horizon").value.trim());
+  return p;
+}
+
+function saveConfig() {
+  const cfg = Object.fromEntries(FIELDS.map(f => [f, $(f).value]));
+  cfg.planes = planesSpec();
+  localStorage.setItem("solarpredict", JSON.stringify(cfg));
+}
+
+function loadConfig() {
+  const raw = localStorage.getItem("solarpredict");
+  if (!raw) { addPlane(); return; }
+  try {
+    const cfg = JSON.parse(raw);
+    FIELDS.forEach(f => { if (cfg[f] !== undefined) $(f).value = cfg[f]; });
+    (cfg.planes || "30:0:5").split(",").forEach(s => { const [d,a,k] = s.split(":"); addPlane(d,a,k); });
+  } catch { addPlane(); }
+}
+
+async function loadForecast() {
+  saveConfig();
+  $("status").textContent = "Loading forecast…";
+  $("status").className = "";
+  try {
+    const resp = await fetch("/api/forecast?" + params());
+    if (!resp.ok) throw new Error((await resp.json()).detail || resp.statusText);
+    const data = await resp.json();
+    renderSummary(data.summary);
+    renderChart(data.series);
+    $("status").textContent = "Updated " + new Date().toLocaleTimeString();
+  } catch (e) {
+    $("status").textContent = "Error: " + e.message;
+    $("status").className = "err";
+  }
+}
+
+function renderSummary(s) {
+  $("summary-card").style.display = "";
+  const peak = s.peak_time_today ? new Date(s.peak_time_today).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "–";
+  $("stats").innerHTML = `
+    <div class="stat"><div class="v">${(s.power_now_w/1000).toFixed(2)} kW</div><div class="l">Power now</div></div>
+    <div class="stat"><div class="v">${s.energy_today_kwh.toFixed(1)} kWh</div><div class="l">Today total</div></div>
+    <div class="stat"><div class="v">${s.energy_today_remaining_kwh.toFixed(1)} kWh</div><div class="l">Today remaining</div></div>
+    <div class="stat"><div class="v">${s.energy_tomorrow_kwh.toFixed(1)} kWh</div><div class="l">Tomorrow</div></div>
+    <div class="stat"><div class="v">${(s.peak_power_today_w/1000).toFixed(2)} kW</div><div class="l">Peak today &middot; ${peak}</div></div>`;
+}
+
+function renderChart(series) {
+  $("chart-card").style.display = "";
+  const W = Math.max(900, series.length * 4), H = 260, PAD = 44, PB = 34;
+  const maxW = Math.max(...series.map(p => p.watts), 100);
+  const x = i => PAD + i * (W - PAD - 10) / (series.length - 1);
+  const y = w => H - PB - (w / maxW) * (H - PB - 14);
+
+  let path = `M ${x(0)} ${y(series[0].watts)}`;
+  series.forEach((p, i) => { path += ` L ${x(i)} ${y(p.watts)}`; });
+  let area = path + ` L ${x(series.length-1)} ${H-PB} L ${x(0)} ${H-PB} Z`;
+
+  let marks = "";
+  let lastDay = "";
+  series.forEach((p, i) => {
+    const d = new Date(p.time);
+    const day = p.time.slice(0, 10);
+    if (day !== lastDay) {
+      lastDay = day;
+      marks += `<line x1="${x(i)}" y1="14" x2="${x(i)}" y2="${H-PB}" stroke="#2d333b" stroke-dasharray="3,3"/>` +
+               `<text x="${x(i)+4}" y="${H-12}" fill="#8b949e" font-size="11">${d.toLocaleDateString([], {weekday:"short", day:"numeric", month:"short"})}</text>`;
+    } else if (d.getHours() % 6 === 0 && d.getMinutes() === 0) {
+      marks += `<text x="${x(i)}" y="${H-20}" fill="#57606a" font-size="9" text-anchor="middle">${String(d.getHours()).padStart(2,"0")}h</text>`;
+    }
+  });
+
+  let yax = "";
+  for (let f = 0; f <= 1; f += 0.25) {
+    const w = maxW * f;
+    yax += `<line x1="${PAD}" y1="${y(w)}" x2="${W-10}" y2="${y(w)}" stroke="#21262d"/>` +
+           `<text x="${PAD-6}" y="${y(w)+4}" fill="#8b949e" font-size="10" text-anchor="end">${(w/1000).toFixed(1)}kW</text>`;
+  }
+
+  $("chart-wrap").innerHTML =
+    `<svg width="${W}" height="${H}" role="img" aria-label="Solar production forecast">
+       ${yax}${marks}
+       <path d="${area}" fill="rgba(240,180,41,0.18)"/>
+       <path d="${path}" fill="none" stroke="#f0b429" stroke-width="1.6"/>
+     </svg>`;
+}
+
+function showYaml() {
+  saveConfig();
+  const base = location.origin;
+  const url = `${base}/api/ha?${params()}`;
+  $("yaml-card").style.display = "";
+  $("yaml").value = `# SolarPredict -> Home Assistant REST sensors
+rest:
+  - resource: "${url}"
+    scan_interval: 900
+    sensor:
+      - name: "Solar forecast power now"
+        unique_id: solarpredict_power_now
+        value_template: "{{ value_json.power_now_w }}"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+      - name: "Solar forecast energy today"
+        unique_id: solarpredict_energy_today
+        value_template: "{{ value_json.energy_today_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast energy today remaining"
+        unique_id: solarpredict_energy_today_remaining
+        value_template: "{{ value_json.energy_today_remaining_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast energy tomorrow"
+        unique_id: solarpredict_energy_tomorrow
+        value_template: "{{ value_json.energy_tomorrow_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast energy next hour"
+        unique_id: solarpredict_energy_next_hour
+        value_template: "{{ value_json.energy_next_hour_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast peak power today"
+        unique_id: solarpredict_peak_power_today
+        value_template: "{{ value_json.peak_power_today_w }}"
+        unit_of_measurement: "W"
+        device_class: power
+      - name: "Solar forecast peak time today"
+        unique_id: solarpredict_peak_time_today
+        value_template: "{{ value_json.peak_time_today }}"
+        device_class: timestamp
+`;
+}
+
+function copyYaml() {
+  navigator.clipboard.writeText($("yaml").value);
+  $("status").textContent = "YAML copied.";
+}
+
+loadConfig();
+loadForecast();
+</script>
+</body>
+</html>

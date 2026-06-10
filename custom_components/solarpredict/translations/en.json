@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to SolarPredict",
+        "description": "Point Home Assistant at your SolarPredict server (self-hosted or Vercel).",
+        "data": {
+          "host": "Server URL",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "planes": "Planes (tilt:azimuth:kWp, comma-separated)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the SolarPredict server. Check the URL."
+    },
+    "abort": {
+      "already_configured": "This SolarPredict server is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SolarPredict options",
+        "data": {
+          "horizon": "Horizon profile (degrees, comma-separated, starting North; empty = none)",
+          "damping_morning": "Morning damping (0–1)",
+          "damping_evening": "Evening damping (0–1)",
+          "inverter_kw": "Inverter limit in kW (0 = no limit)",
+          "efficiency": "System efficiency",
+          "days": "Forecast days",
+          "resolution": "Resolution (minutes)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power_now": { "name": "Power now" },
+      "energy_today": { "name": "Energy today" },
+      "energy_today_remaining": { "name": "Energy today remaining" },
+      "energy_tomorrow": { "name": "Energy tomorrow" },
+      "energy_next_hour": { "name": "Energy next hour" },
+      "peak_power_today": { "name": "Peak power today" },
+      "peak_time_today": { "name": "Peak time today" }
+    }
+  }
+}

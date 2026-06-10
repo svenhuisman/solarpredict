@@ -1,0 +1,51 @@
+# SolarPredict package for Home Assistant
+#
+# 1. Edit the resource URL below (host, lat, lon, planes, tz).
+# 2. Save as <config>/packages/solarpredict.yaml
+# 3. Make sure packages are enabled in configuration.yaml:
+#      homeassistant:
+#        packages: !include_dir_named packages
+# 4. Restart Home Assistant.
+#
+# Tip: with SP_LAT / SP_LON / SP_PLANES set in docker-compose.yml the
+# resource can simply be "http://YOUR_HOST:8000/api/ha".
+
+rest:
+  - resource: "http://YOUR_HOST:8000/api/ha?lat=52.37&lon=4.90&planes=30:0:5.0&tz=Europe/Amsterdam"
+    scan_interval: 900
+    sensor:
+      - name: "Solar forecast power now"
+        unique_id: solarpredict_power_now
+        value_template: "{{ value_json.power_now_w }}"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+      - name: "Solar forecast energy today"
+        unique_id: solarpredict_energy_today
+        value_template: "{{ value_json.energy_today_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast energy today remaining"
+        unique_id: solarpredict_energy_today_remaining
+        value_template: "{{ value_json.energy_today_remaining_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast energy tomorrow"
+        unique_id: solarpredict_energy_tomorrow
+        value_template: "{{ value_json.energy_tomorrow_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast energy next hour"
+        unique_id: solarpredict_energy_next_hour
+        value_template: "{{ value_json.energy_next_hour_kwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: "Solar forecast peak power today"
+        unique_id: solarpredict_peak_power_today
+        value_template: "{{ value_json.peak_power_today_w }}"
+        unit_of_measurement: "W"
+        device_class: power
+      - name: "Solar forecast peak time today"
+        unique_id: solarpredict_peak_time_today
+        value_template: "{{ value_json.peak_time_today }}"
+        device_class: timestamp

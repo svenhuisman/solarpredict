@@ -1,0 +1,11 @@
+{
+  "domain": "solarpredict",
+  "name": "SolarPredict",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/svenhuisman/solarpredict",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "requirements": [],
+  "version": "1.0.0"
+}
