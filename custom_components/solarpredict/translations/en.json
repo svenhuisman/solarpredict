@@ -8,8 +8,13 @@
           "host": "Server URL",
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "planes": "Planes (tilt:azimuth:kWp, comma-separated; azimuth 0=S, -90=E, 90=W \u2014 or compass degrees like 113c, or N/SE/W)",
-          "api_token": "API token (only if the server has SP_API_TOKEN set)"
+          "planes": "Planes (tilt:azimuth:kWp, comma-separated)",
+          "api_token": "API token"
+        },
+        "data_description": {
+          "host": "Example: http://192.168.1.10:8000 or https://your-app.vercel.app",
+          "planes": "One entry per panel string, e.g. 30:113c:2.5,30:SE:2.0. Tilt: 0 = flat, 90 = vertical. Azimuth: 0 = South, -90 = East, 90 = West — or compass degrees (what your phone's compass app shows) with a 'c' suffix like 113c, or a direction like S, SE, WSW. Capacity in kWp (4000 Wp = 4.0).",
+          "api_token": "Only needed if the server has SP_API_TOKEN set (recommended for public/Vercel deployments)."
         }
       },
       "reconfigure": {
@@ -19,8 +24,13 @@
           "host": "Server URL",
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "planes": "Planes (tilt:azimuth:kWp, comma-separated; azimuth 0=S, -90=E, 90=W \u2014 or compass degrees like 113c, or N/SE/W)",
-          "api_token": "API token (only if the server has SP_API_TOKEN set)"
+          "planes": "Planes (tilt:azimuth:kWp, comma-separated)",
+          "api_token": "API token"
+        },
+        "data_description": {
+          "host": "Example: http://192.168.1.10:8000 or https://your-app.vercel.app",
+          "planes": "One entry per panel string, e.g. 30:113c:2.5,30:SE:2.0. Tilt: 0 = flat, 90 = vertical. Azimuth: 0 = South, -90 = East, 90 = West — or compass degrees (what your phone's compass app shows) with a 'c' suffix like 113c, or a direction like S, SE, WSW. Capacity in kWp (4000 Wp = 4.0).",
+          "api_token": "Only needed if the server has SP_API_TOKEN set (recommended for public/Vercel deployments)."
         }
       }
     },
@@ -37,13 +47,19 @@
       "init": {
         "title": "SolarPredict options",
         "data": {
-          "horizon": "Horizon profile (degrees, comma-separated, starting North; empty = none)",
+          "horizon": "Horizon profile",
           "damping_morning": "Morning damping (0–1)",
           "damping_evening": "Evening damping (0–1)",
           "inverter_kw": "Inverter limit in kW (0 = no limit)",
           "efficiency": "System efficiency",
           "days": "Forecast days",
           "resolution": "Resolution (minutes)"
+        },
+        "data_description": {
+          "horizon": "Elevation in degrees of obstructions around you, comma-separated, evenly spaced starting North (e.g. 8 values = 45° steps). Leave empty for an open horizon.",
+          "damping_morning": "Attenuates low-sun production in the morning (shading, dew). 0 = off.",
+          "damping_evening": "Attenuates low-sun production in the evening. 0 = off.",
+          "efficiency": "Overall system losses (inverter, wiring, soiling). 0.90 is a reasonable default."
         }
       }
     }
