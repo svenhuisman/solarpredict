@@ -113,6 +113,35 @@ def test_api_validation_errors():
     assert r.status_code == 422
 
 
+def test_api_token_required_when_set(monkeypatch, patched_weather):
+    monkeypatch.setenv("SP_API_TOKEN", "sekrit")
+    client = TestClient(fastapi_app)
+    params = {"lat": 52, "lon": 5, "planes": "30:0:5"}
+
+    assert client.get("/api/forecast", params=params).status_code == 401
+    assert client.get("/api/ha", params=params).status_code == 401
+    assert client.get("/estimate/52/5/30/0/5").status_code == 401
+    # healthz and UI stay open
+    assert client.get("/healthz").status_code == 200
+
+    # all three auth mechanisms work
+    assert client.get("/api/ha", params={**params, "token": "sekrit"}).status_code == 200
+    assert client.get("/api/ha", params=params, headers={"X-API-Key": "sekrit"}).status_code == 200
+    assert (
+        client.get("/api/ha", params=params, headers={"Authorization": "Bearer sekrit"}).status_code
+        == 200
+    )
+    # wrong token rejected
+    assert client.get("/api/ha", params={**params, "token": "wrong"}).status_code == 401
+
+
+def test_api_open_when_no_token_configured(monkeypatch, patched_weather):
+    monkeypatch.delenv("SP_API_TOKEN", raising=False)
+    client = TestClient(fastapi_app)
+    r = client.get("/api/ha", params={"lat": 52, "lon": 5, "planes": "30:0:5"})
+    assert r.status_code == 200
+
+
 @pytest.fixture
 def anyio_backend():
     return "asyncio"

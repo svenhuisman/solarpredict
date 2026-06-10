@@ -69,6 +69,10 @@
         <label>Horizon profile (elevation &deg;, comma-separated, evenly spaced starting North)</label>
         <input id="horizon" placeholder="e.g. 0,0,5,12,8,3,0,0  (8 values = 45&deg; steps)">
       </div>
+      <div style="margin-top:10px">
+        <label>API token (only if server has SP_API_TOKEN set)</label>
+        <input id="token" type="password" placeholder="leave empty for open servers">
+      </div>
     </details>
 
     <div class="row">
@@ -94,7 +98,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const FIELDS = ["lat","lon","tz","days","resolution","inverter_kw","efficiency","albedo","damping_morning","damping_evening","horizon"];
+const FIELDS = ["lat","lon","tz","days","resolution","inverter_kw","efficiency","albedo","damping_morning","damping_evening","horizon","token"];
 
 function addPlane(dec = 30, az = 0, kwp = 5.0) {
   const row = document.createElement("div");
@@ -123,6 +127,7 @@ function params() {
   });
   if ($("inverter_kw").value) p.set("inverter_kw", $("inverter_kw").value);
   if ($("horizon").value.trim()) p.set("horizon", $("horizon").value.trim());
+  if ($("token").value.trim()) p.set("token", $("token").value.trim());
   return p;
 }
 

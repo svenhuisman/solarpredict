@@ -57,8 +57,17 @@ Set `SP_LAT`, `SP_LON`, `SP_PLANES`, `SP_TZ` as environment variables in the
 Vercel dashboard (or `vercel env add`) so `/api/ha` works without query
 parameters. Runs fine on the free Hobby tier — HA polls every 15 minutes,
 which is a trivial load. Note: the deployment must stay publicly reachable
-for HA to poll it (don't enable Deployment Protection on production). The
-API holds no secrets, only solar math.
+for HA to poll it (don't enable Deployment Protection on production).
+
+**Protect a public deployment:** set the `SP_API_TOKEN` environment variable
+(any long random string, e.g. `openssl rand -hex 24`). All forecast endpoints
+then require the token via `X-API-Key` header, `Authorization: Bearer` or
+`?token=` query parameter; only `/healthz` and the UI page stay open. Enter
+the same token in the HA integration's setup form (or the UI's Advanced
+section). When `SP_API_TOKEN` is unset the API is open — fine for
+LAN-only Docker. Vercel additionally applies automatic DDoS mitigation on
+all plans; per-rule rate limiting via Vercel WAF is available on Pro if you
+ever need it.
 
 ## Home Assistant integration
 

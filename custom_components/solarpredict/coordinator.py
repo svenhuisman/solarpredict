@@ -13,6 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_API_TOKEN,
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DAYS,
@@ -73,12 +74,19 @@ class SolarPredictCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             params[query_key] = str(value)
         return params
 
+    def _headers(self) -> dict[str, str]:
+        token = self.entry.data.get(CONF_API_TOKEN)
+        return {"X-API-Key": token} if token else {}
+
     async def _async_update_data(self) -> dict[str, Any]:
         session = async_get_clientsession(self.hass)
         url = f"{self.host}/api/forecast"
         try:
             async with session.get(
-                url, params=self._params(), timeout=aiohttp.ClientTimeout(total=60)
+                url,
+                params=self._params(),
+                headers=self._headers(),
+                timeout=aiohttp.ClientTimeout(total=60),
             ) as resp:
                 if resp.status != 200:
                     body = (await resp.text())[:200]

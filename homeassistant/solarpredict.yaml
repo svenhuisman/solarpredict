@@ -9,6 +9,13 @@
 #
 # Tip: with SP_LAT / SP_LON / SP_PLANES set in docker-compose.yml the
 # resource can simply be "http://YOUR_HOST:8000/api/ha".
+#
+# If the server has SP_API_TOKEN set (recommended for public/Vercel
+# deployments), add the token as a header:
+#
+#   - resource: "https://your-app.vercel.app/api/ha"
+#     headers:
+#       X-API-Key: "YOUR_TOKEN"
 
 rest:
   - resource: "http://YOUR_HOST:8000/api/ha?lat=52.37&lon=4.90&planes=30:0:5.0&tz=Europe/Amsterdam"

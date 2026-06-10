@@ -5,6 +5,7 @@ from datetime import timedelta
 DOMAIN = "solarpredict"
 
 CONF_HOST = "host"
+CONF_API_TOKEN = "api_token"
 CONF_PLANES = "planes"
 CONF_HORIZON = "horizon"
 CONF_DAMPING_MORNING = "damping_morning"

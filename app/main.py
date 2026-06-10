@@ -21,7 +21,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from fastapi import FastAPI, HTTPException, Query
+import secrets as _secrets
+
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -45,6 +47,25 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 def _env(name: str, default: str | None = None) -> str | None:
     v = os.environ.get(name)
     return v if v not in (None, "") else default
+
+
+def verify_token(request: Request) -> None:
+    """Require an API token on forecast endpoints when SP_API_TOKEN is set.
+
+    Accepted: X-API-Key header, Authorization: Bearer <token>, or ?token= query.
+    When SP_API_TOKEN is unset the API is open (typical for LAN/Docker use).
+    """
+    expected = _env("SP_API_TOKEN")
+    if not expected:
+        return
+    auth = request.headers.get("authorization", "")
+    supplied = (
+        request.headers.get("x-api-key")
+        or (auth[7:] if auth.lower().startswith("bearer ") else None)
+        or request.query_params.get("token")
+    )
+    if not supplied or not _secrets.compare_digest(supplied, expected):
+        raise HTTPException(status_code=401, detail="Invalid or missing API token")
 
 
 def _build_config(
@@ -124,7 +145,7 @@ async def healthz():
     return {"status": "ok"}
 
 
-@app.get("/api/forecast")
+@app.get("/api/forecast", dependencies=[Depends(verify_token)])
 async def api_forecast(
     lat: float | None = None,
     lon: float | None = None,
@@ -162,7 +183,7 @@ async def api_forecast(
     }
 
 
-@app.get("/api/ha")
+@app.get("/api/ha", dependencies=[Depends(verify_token)])
 async def api_ha(
     lat: float | None = None,
     lon: float | None = None,
@@ -185,7 +206,7 @@ async def api_ha(
     return to_ha_summary(result)
 
 
-@app.get("/estimate/{lat}/{lon}/{dec}/{az}/{kwp}")
+@app.get("/estimate/{lat}/{lon}/{dec}/{az}/{kwp}", dependencies=[Depends(verify_token)])
 async def estimate(
     lat: float,
     lon: float,

@@ -18,3 +18,4 @@ services:
       # SP_DAMPING_MORNING: "0.2"
       # SP_DAMPING_EVENING: "0.2"
       # SP_EFFICIENCY: "0.90"
+      # SP_API_TOKEN: "change-me"   # require token on API (recommended if exposed to internet)

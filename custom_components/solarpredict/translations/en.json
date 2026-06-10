@@ -8,7 +8,8 @@
           "host": "Server URL",
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "planes": "Planes (tilt:azimuth:kWp, comma-separated)"
+          "planes": "Planes (tilt:azimuth:kWp, comma-separated)",
+          "api_token": "API token (only if the server has SP_API_TOKEN set)"
         }
       }
     },

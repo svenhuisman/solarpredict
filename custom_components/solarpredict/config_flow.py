@@ -12,6 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_API_TOKEN,
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DAYS,
@@ -58,6 +59,7 @@ class SolarPredictConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): vol.Coerce(float),
                 vol.Required(CONF_PLANES, default=DEFAULT_PLANES): str,
+                vol.Optional(CONF_API_TOKEN, default=""): str,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
